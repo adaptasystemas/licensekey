@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Painel de licenças</title>
+<script>window.APP_VERSION='1.0.0'</script>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--tx:#17202e;--mut:#667085;--bd:#e3e8f0;--pri:#1d4ed8;--ok:#127a3e;--warn:#9a5b00;--bad:#b42318}
+*{box-sizing:border-box}body{margin:0;font:15px/1.4 system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--tx)}
+header{background:#101828;color:#fff;padding:12px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+header h1{font-size:17px;margin:0;flex:1}
+main{max-width:1000px;margin:0 auto;padding:14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:12px}
+input,select,textarea{width:100%;padding:9px 10px;border:1px solid var(--bd);border-radius:10px;font:inherit;background:#fff}
+label{display:block;font-size:12px;color:var(--mut);margin:8px 0 3px;font-weight:600}
+button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:9px 13px;background:var(--pri);color:#fff;cursor:pointer}
+button.s{background:#eef2f7;color:var(--tx)}button.r{background:#fde8e6;color:var(--bad)}button.g{background:#e3f6ea;color:var(--ok)}
+button:disabled{opacity:.5}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row>*{flex:0 0 auto}.grow{flex:1!important;min-width:140px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}@media(max-width:600px){.g2{grid-template-columns:1fr}}
+.tag{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:800}
+.t-ativa,.t-isenta{background:#e3f6ea;color:var(--ok)}.t-teste{background:#e0ecff;color:var(--pri)}
+.t-carencia{background:#fff4d6;color:var(--warn)}.t-vencida,.t-bloqueada{background:#fde8e6;color:var(--bad)}
+.cli{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--bd)}.cli:first-child{border-top:0}
+.cli b{display:block}.mut{color:var(--mut);font-size:13px}
+.key{font-family:ui-monospace,Menlo,monospace;font-weight:700;letter-spacing:.5px}
+.ov{position:fixed;inset:0;background:#0007;display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:18px;z-index:9}
+.ov.on{display:flex}.box{background:#fff;border-radius:16px;padding:16px;max-width:560px;width:100%}
+.err{color:var(--bad);font-weight:700;margin:8px 0}.ok{color:var(--ok);font-weight:700;margin:8px 0}
+img.qr{width:200px;height:200px;display:block;margin:8px auto}
+code{background:#eef2f7;padding:2px 5px;border-radius:6px;word-break:break-all}
+</style></head><body>
+<header><h1>Painel de licenças</h1><span id="who" class="mut" style="color:#cbd5e1"></span><button class="s" id="bSair" style="display:none" onclick="sair()">Sair</button></header>
+<main id="app"></main>
+<div class="ov" id="ov"><div class="box" id="box"></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const brl=c=>(c/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const dt=d=>d?String(d).slice(0,10).split('-').reverse().join('/'):'—';
+const LS={get(k){try{return localStorage.getItem(k)||''}catch(e){return ''}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let sb=null,sess=null,DATA={clientes:[],planos:[]},FILT='',BUSCA='';
+const ROT={ativa:'Em dia',teste:'Em teste',carencia:'Em carência',vencida:'Vencida',bloqueada:'Bloqueada',isenta:'Isenta'};
+
+function cfg(){return {url:LS.get('lp_url'),key:LS.get('lp_key')}}
+function fnUrl(){return cfg().url.replace(/\/+$/,'')+'/functions/v1/licenca'}
+async function api(action,extra){
+  const {data:{session}}=await sb.auth.getSession();
+  const r=await fetch(fnUrl(),{method:'POST',headers:{'Content-Type':'application/json','apikey':cfg().key,'Authorization':'Bearer '+(session?.access_token||cfg().key)},body:JSON.stringify({action,...(extra||{})})});
+  let j;try{j=await r.json()}catch(e){j={ok:false,erro:'Resposta inválida do servidor ('+r.status+').'}}
+  if(!j.ok)throw new Error(j.erro||'Erro');return j;
+}
+function viewConfig(msg){
+  $('#app').innerHTML=`<div class="card"><h2 style="margin-top:0">Conectar ao projeto central</h2>
+  <p class="mut">Use o projeto Supabase onde você rodou <code>supabase-licencas.sql</code>. A chave é a <b>anon (pública)</b> — nunca a service_role.</p>
+  <label>URL do projeto</label><input id="cu" placeholder="https://xxxx.supabase.co" value="${esc(cfg().url)}">
+  <label>Chave anon</label><input id="ck" value="${esc(cfg().key)}">
+  ${msg?`<div class="err">${esc(msg)}</div>`:''}
+  <div class="row" style="margin-top:10px"><button onclick="salvaCfg()">Conectar</button></div></div>`;
+}
+function salvaCfg(){
+  const u=$('#cu').value.trim().replace(/\/+$/,''),k=$('#ck').value.trim();
+  if(!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(u))return viewConfig('URL inválida. Exemplo: https://abcd.supabase.co');
+  if(k.length<20)return viewConfig('Cole a chave anon.');
+  LS.set('lp_url',u);LS.set('lp_key',k);boot();
+}
+function viewLogin(msg){
+  $('#app').innerHTML=`<div class="card" style="max-width:380px;margin:30px auto"><h2 style="margin-top:0">Entrar</h2>
+  <label>E-mail</label><input id="le" type="email" autocomplete="username" value="${esc(LS.get('lp_mail'))}">
+  <label>Senha</label><input id="lp" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')entrar()">
+  ${msg?`<div class="err">${esc(msg)}</div>`:''}
+  <div class="row" style="margin-top:10px"><button onclick="entrar()">Entrar</button><button class="s" onclick="viewConfig()">Trocar projeto</button></div></div>`;
+}
+async function entrar(){
+  const email=$('#le').value.trim(),password=$('#lp').value;
+  const {error}=await sb.auth.signInWithPassword({email,password});
+  if(error)return viewLogin('E-mail ou senha incorretos.');
+  LS.set('lp_mail',email);boot();
+}
+async function sair(){await sb.auth.signOut();boot()}
+async function boot(){
+  const c=cfg();$('#who').textContent='';$('#bSair').style.display='none';
+  if(!c.url||!c.key)return viewConfig();
+  sb=supabase.createClient(c.url,c.key,{auth:{persistSession:true,storageKey:'lp_auth'}});
+  const {data:{session}}=await sb.auth.getSession();sess=session;
+  if(!session)return viewLogin();
+  $('#who').textContent=session.user.email;$('#bSair').style.display='';
+  await carregar();
+}
+async function carregar(){
+  try{
+    $('#app').innerHTML='<div class="card mut">Carregando…</div>';
+    const j=await api('listar');DATA=j;lista();
+  }catch(e){$('#app').innerHTML=`<div class="card"><div class="err">${esc(e.message)}</div><p class="mut">Confira se a função <code>licenca</code> foi criada, se o segredo <code>LIC_ADMIN_EMAILS</code> contém seu e-mail e se o SQL foi executado.</p><div class="row"><button onclick="carregar()">Tentar de novo</button><button class="s" onclick="infoServidor()">Chave pública / URL</button></div></div>`}
+}
+function lista(){
+  const L=DATA.clientes.filter(c=>(!FILT||c.estado.st===FILT)&&(!BUSCA||(c.nome+' '+(c.cnpj||'')+' '+c.chave).toLowerCase().includes(BUSCA.toLowerCase())));
+  const cont=s=>DATA.clientes.filter(c=>c.estado.st===s).length;
+  const receita=DATA.clientes.filter(c=>['ativa','carencia'].includes(c.estado.st)).reduce((s,c)=>s+(c.preco_centavos||0),0);
+  $('#app').innerHTML=`<div class="card"><div class="row">
+   <div class="grow"><b style="font-size:18px">${DATA.clientes.length} loja(s)</b><div class="mut">Em dia: ${cont('ativa')} · Teste: ${cont('teste')} · Carência: ${cont('carencia')} · Vencidas: ${cont('vencida')} · Bloqueadas: ${cont('bloqueada')}</div><div class="mut">Mensalidade das que pagam: ${brl(receita)}/mês</div></div>
+   <button onclick="editar()">+ Nova loja</button><button class="s" onclick="planos()">Planos</button><button class="s" onclick="infoServidor()">Servidor</button></div>
+   <div class="row" style="margin-top:10px"><input class="grow" placeholder="Buscar nome, CNPJ ou chave" value="${esc(BUSCA)}" oninput="BUSCA=this.value;lista();this.focus()">
+   <select style="width:auto" onchange="FILT=this.value;lista()"><option value="">Todas</option>${Object.keys(ROT).map(k=>`<option value="${k}" ${FILT===k?'selected':''}>${ROT[k]}</option>`).join('')}</select></div></div>
+  <div class="card">${L.map(c=>{const e=c.estado,fa=c.fatura_aberta;return `<div class="cli">
+   <div class="grow"><b>${esc(c.nome)}</b><span class="mut">${esc(c.plano)} · ${brl(c.preco_centavos||0)} · válida até ${dt(e.ate)}${e.st==='ativa'||e.st==='teste'?` (${e.dias} dia(s))`:''}${c.ultimo_check?` · visto ${dt(c.ultimo_check)} (${esc(c.ultimo_app||'')} ${esc(c.ultima_versao||'')})`:' · nunca conectou'}</span>${fa?`<span class="mut">Cobrança aberta ${esc(fa.ref)}: ${brl(fa.valor_centavos)}</span>`:''}</div>
+   <span class="tag t-${e.st}">${ROT[e.st]||e.st}</span><button class="s" onclick="abrir('${c.id}')">Abrir</button></div>`}).join('')||'<p class="mut">Nenhuma loja.</p>'}</div>`;
+}
+function modal(h){$('#box').innerHTML=h;$('#ov').classList.add('on')}
+function fechar(){$('#ov').classList.remove('on')}
+$('#ov').addEventListener('mousedown',e=>{if(e.target.id==='ov')fechar()});
+async function tenta(fn,ok){try{await fn();if(ok)toast(ok)}catch(e){alert(e.message)}}
+function toast(m){const d=document.createElement('div');d.textContent=m;d.style.cssText='position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#101828;color:#fff;padding:9px 16px;border-radius:99px;z-index:99;font-weight:700';document.body.appendChild(d);setTimeout(()=>d.remove(),2200)}
+function copiar(t){navigator.clipboard?.writeText(t).then(()=>toast('Copiado'),()=>prompt('Copie:',t))||prompt('Copie:',t)}
+
+function editar(id){
+  const c=id?DATA.clientes.find(x=>x.id===id):{};
+  modal(`<h3 style="margin-top:0">${id?'Editar loja':'Nova loja'}</h3>
+  <label>Nome da loja *</label><input id="fn" value="${esc(c.nome)}">
+  <div class="g2"><div><label>CNPJ</label><input id="fc" value="${esc(c.cnpj)}"></div><div><label>Contato</label><input id="fo" value="${esc(c.contato)}"></div>
+  <div><label>WhatsApp (com DDD)</label><input id="ff" value="${esc(c.fone)}"></div><div><label>E-mail</label><input id="fe" value="${esc(c.email)}"></div></div>
+  <label>Plano</label><select id="fp">${DATA.planos.filter(p=>p.ativo||p.id===c.plan_id).map(p=>`<option value="${p.id}" ${p.id===c.plan_id?'selected':''}>${esc(p.nome)} — ${brl(p.preco_centavos)}</option>`).join('')}</select>
+  <label>Observações</label><textarea id="fb" rows="2">${esc(c.obs)}</textarea>
+  <div class="row" style="margin-top:12px"><button onclick="salvarCli('${id||''}')">Salvar</button><button class="s" onclick="fechar()">Cancelar</button></div>`);
+}
+async function salvarCli(id){
+  await tenta(async()=>{const j=await api('cliente_salvar',{id:id||undefined,nome:$('#fn').value,cnpj:$('#fc').value,contato:$('#fo').value,fone:$('#ff').value,email:$('#fe').value,plan_id:$('#fp').value||null,obs:$('#fb').value});
+    await carregar();if(!id&&j.cliente)abrir(j.cliente.id);else fechar()});
+}
+function abrir(id){
+  const c=DATA.clientes.find(x=>x.id===id);if(!c)return fechar();const e=c.estado;
+  modal(`<div class="row"><h3 style="margin:0" class="grow">${esc(c.nome)}</h3><span class="tag t-${e.st}">${ROT[e.st]}</span></div>
+  <p class="mut">${esc(c.plano)} · ${brl(c.preco_centavos||0)}/mês · válida até <b>${dt(e.ate)}</b> · carência até ${dt(e.car)}${c.cnpj?` · CNPJ ${esc(c.cnpj)}`:''}</p>
+  <label>Chave de licença (coloque em Empresa › Licença da loja)</label>
+  <div class="row"><span class="key grow">${esc(c.chave)}</span><button class="s" onclick="copiar('${esc(c.chave)}')">Copiar</button><button class="s" onclick="novaChave('${id}')">Gerar outra</button></div>
+  <div class="row" style="margin-top:12px">
+   <button class="s" onclick="editar('${id}')">Editar</button>
+   <button onclick="cobrar('${id}')">Gerar cobrança Pix</button>
+   <button class="g" onclick="cortesia('${id}')">Dar cortesia (dias)</button>
+   ${c.situacao==='bloqueada'?`<button class="g" onclick="acao('${id}','liberar')">Liberar</button>`:`<button class="r" onclick="acao('${id}','bloquear')">Bloquear</button>`}
+   ${c.situacao==='isenta'?`<button class="s" onclick="acao('${id}','normal')">Voltar a cobrar</button>`:`<button class="s" onclick="acao('${id}','isentar')">Isentar</button>`}
+  </div><div id="hist" class="mut" style="margin-top:14px">Carregando histórico…</div>
+  <div class="row" style="margin-top:12px"><button class="s" onclick="fechar()">Fechar</button><button class="r" onclick="excluir('${id}')">Excluir loja</button></div>`);
+  api('faturas',{id}).then(j=>{
+    const h=$('#hist');if(!h)return;
+    h.innerHTML=`<b>Cobranças</b>`+(j.faturas.map(f=>`<div class="cli"><div class="grow">${esc(f.ref)} · ${brl(f.valor_centavos)} · ${esc(f.status)}${f.paga_em?' em '+dt(f.paga_em):''}</div>
+      ${f.status==='pendente'?`<button class="s" onclick="verFatura('${id}','${f.id}')">Ver Pix</button><button class="g" onclick="baixar('${id}','${f.id}')">Baixa manual</button><button class="r" onclick="cancelaF('${id}','${f.id}')">Cancelar</button>`:''}</div>`).join('')||'<div class="mut">Nenhuma ainda.</div>')
+      +`<div style="margin-top:10px"><b>Eventos</b></div>`+(j.eventos.slice(0,10).map(v=>`<div class="mut">${dt(v.em)} · ${esc(v.tipo)}</div>`).join('')||'<div class="mut">—</div>');
+    window._fat=j.faturas;
+  }).catch(e=>{const h=$('#hist');if(h)h.innerHTML='<span class="err">'+esc(e.message)+'</span>'});
+}
+async function novaChave(id){if(!confirm('Gerar outra chave? A loja precisará digitar a nova chave.'))return;
+  await tenta(async()=>{const j=await api('chave_nova',{id});await carregar();abrir(id)},'Nova chave gerada')}
+async function acao(id,a){await tenta(async()=>{await api('cliente_acao',{id,acao:a});await carregar();abrir(id)},'Feito')}
+async function cortesia(id){const d=prompt('Quantos dias de cortesia (1 a 365)?','30');if(!d)return;
+  await tenta(async()=>{await api('cliente_estender',{id,dias:Number(d)});await carregar();abrir(id)},'Prazo estendido')}
+async function excluir(id){if(!confirm('Excluir esta loja e o histórico? A loja perderá a licença.'))return;
+  await tenta(async()=>{await api('cliente_excluir',{id});fechar();await carregar()},'Excluída')}
+async function cobrar(id){await tenta(async()=>{const j=await api('fatura_criar',{id});await carregar();mostraFatura(id,j.fatura)})}
+function verFatura(id,fid){const f=(window._fat||[]).find(x=>x.id===fid);if(f)mostraFatura(id,f)}
+function mostraFatura(id,f){
+  const c=DATA.clientes.find(x=>x.id===id)||{};
+  const msg=`Olá! Segue a mensalidade do sistema (${f.ref}) no valor de ${brl(f.valor_centavos)}.\nPix copia e cola:\n${f.qr_code}\nApós o pagamento a licença renova sozinha.`;
+  const wa=c.fone?`https://wa.me/55${String(c.fone).replace(/^55/,'')}?text=${encodeURIComponent(msg)}`:'';
+  modal(`<h3 style="margin-top:0">Cobrança ${esc(f.ref)} — ${brl(f.valor_centavos)}</h3>
+  ${f.qr_base64?`<img class="qr" src="data:image/png;base64,${esc(f.qr_base64)}" alt="QR Pix">`:''}
+  <label>Pix copia e cola</label><code>${esc(f.qr_code)}</code>
+  <div class="row" style="margin-top:10px"><button onclick="copiar(${esc(JSON.stringify(f.qr_code||''))})">Copiar Pix</button>
+  ${wa?`<a href="${wa}" target="_blank" rel="noopener"><button class="g">Enviar por WhatsApp</button></a>`:''}
+  <button class="s" onclick="sync('${id}','${f.id}')">Conferir pagamento</button><button class="s" onclick="abrir('${id}')">Voltar</button></div>`);
+}
+async function sync(id,fid){await tenta(async()=>{const j=await api('fatura_sync',{id:fid});await carregar();toast(j.status==='paga'?'Pago! Licença renovada.':'Ainda pendente');abrir(id)})}
+async function baixar(id,fid){if(!confirm('Marcar como recebida por fora (dinheiro/transferência) e renovar a licença por 1 mês?'))return;
+  await tenta(async()=>{const j=await api('fatura_baixar',{id:fid});await carregar();abrir(id)},'Baixa registrada')}
+async function cancelaF(id,fid){await tenta(async()=>{await api('fatura_cancelar',{id:fid});abrir(id)},'Cancelada')}
+function planos(){
+  modal(`<h3 style="margin-top:0">Planos</h3>`+DATA.planos.map(p=>`<div class="card"><div class="g2">
+   <div><label>Nome</label><input id="pn${p.id}" value="${esc(p.nome)}"></div><div><label>Preço mensal (R$)</label><input id="pv${p.id}" value="${(p.preco_centavos/100).toFixed(2)}"></div>
+   <div><label>Dias de teste</label><input id="pt${p.id}" type="number" value="${p.dias_teste}"></div><div><label>Dias de carência</label><input id="pc${p.id}" type="number" value="${p.dias_carencia}"></div>
+   <div><label>Dias sem internet permitidos</label><input id="po${p.id}" type="number" value="${p.off_dias}"></div></div>
+   <div class="row" style="margin-top:8px"><button onclick="salvaPlano('${p.id}')">Salvar plano</button></div></div>`).join('')
+   +`<div class="row"><button class="s" onclick="novoPlano()">+ Novo plano</button><button class="s" onclick="fechar()">Fechar</button></div><p class="mut">Mudar o preço vale para as próximas cobranças; as já geradas mantêm o valor.</p>`);
+}
+async function salvaPlano(id){await tenta(async()=>{await api('plano_salvar',{id,nome:$('#pn'+id).value,preco_centavos:Math.round(parseFloat(String($('#pv'+id).value).replace(',','.'))*100),dias_teste:$('#pt'+id).value,dias_carencia:$('#pc'+id).value,off_dias:$('#po'+id).value});await carregar();planos()},'Plano salvo')}
+async function novoPlano(){const n=prompt('Nome do novo plano:');if(!n)return;await tenta(async()=>{await api('plano_salvar',{nome:n,preco_centavos:9900,dias_teste:14,dias_carencia:5,off_dias:10});await carregar();planos()})}
+async function infoServidor(){
+  modal('<p class="mut">Carregando…</p>');
+  try{const j=await api('admin_init');
+    modal(`<h3 style="margin-top:0">Servidor de licenças</h3>
+    <p>${j.mp?'<span class="ok">Mercado Pago configurado.</span>':'<span class="err">Segredo MP_ACCESS_TOKEN não definido — cobrança por Pix indisponível.</span>'}</p>
+    <label>URL da função (vai no app como LIC_URL)</label><code>${esc(j.url)}</code>
+    <label>Chave pública de assinatura (não é segredo)</label><code>${esc(JSON.stringify(j.pub))}</code>
+    <label>Webhook do Mercado Pago</label><code>${esc(j.url+'?hook=1')}</code>
+    <div class="row" style="margin-top:12px"><button class="s" onclick="copiar(${esc(JSON.stringify(JSON.stringify(j.pub)))})">Copiar chave pública</button><button class="s" onclick="fechar()">Fechar</button></div>`);
+  }catch(e){modal(`<div class="err">${esc(e.message)}</div><button class="s" onclick="fechar()">Fechar</button>`)}
+}
+boot();
+</script></body></html>
