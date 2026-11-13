@@ -25,7 +25,7 @@ function criarJanela() {
   win = new BrowserWindow({
     width: s.width || 1280, height: s.height || 800, x: s.x, y: s.y, minWidth: 380, minHeight: 520,
     title: 'AdaptaSys · Painel de licenças', backgroundColor: '#e9f0fb', autoHideMenuBar: true,
-    icon: path.join(__dirname, 'build', 'icon.ico'),
+    icon: path.join(__dirname, 'build', 'adaptasys.ico'),
     webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, spellcheck: false }
   });
   if (s.max) win.maximize();

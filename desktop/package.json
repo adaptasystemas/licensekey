@@ -1,6 +1,6 @@
 {
   "name": "adaptasys-painel",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "AdaptaSys: painel de licenças para Windows, com atualização automática pela internet.",
   "main": "main.js",
   "author": "AdaptaSys",
@@ -28,7 +28,7 @@
       "main.js",
       "offline.html",
       "package.json",
-      "build/icon.ico"
+      "build/adaptasys.ico"
     ],
     "win": {
       "target": [
@@ -39,7 +39,7 @@
           ]
         }
       ],
-      "icon": "build/icon.ico"
+      "icon": "build/adaptasys.ico"
     },
     "nsis": {
       "oneClick": false,
@@ -47,13 +47,13 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "AdaptaSys Painel",
-      "artifactName": "AdaptaSys-Painel-Instalador.${ext}",
+      "artifactName": "AdaptaSys-Painel-Instalador-${version}.${ext}",
       "allowToChangeInstallationDirectory": true,
       "runAfterFinish": true,
       "deleteAppDataOnUninstall": false,
-      "installerIcon": "build/icon.ico",
-      "uninstallerIcon": "build/icon.ico",
-      "installerHeaderIcon": "build/icon.ico"
+      "installerIcon": "build/adaptasys.ico",
+      "uninstallerIcon": "build/adaptasys.ico",
+      "installerHeaderIcon": "build/adaptasys.ico"
     },
     "publish": [
       {
