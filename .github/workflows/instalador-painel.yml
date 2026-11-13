@@ -14,6 +14,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Conferir o ícone que será usado
+        shell: bash
+        working-directory: desktop
+        run: |
+          ls -la build
+          sha256sum build/adaptasys.ico
+          grep -n '"version"' package.json
       - name: Instalar e gerar
         working-directory: desktop
         run: |
