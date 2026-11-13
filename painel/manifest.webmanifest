@@ -1,0 +1,17 @@
+{
+  "name": "AdaptaSys · Painel de licenças",
+  "short_name": "AdaptaSys",
+  "description": "Painel de licenças das lojas AdaptaSys",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#e9f0fb",
+  "theme_color": "#0a56c9",
+  "lang": "pt-BR",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
