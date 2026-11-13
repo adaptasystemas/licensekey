@@ -83,12 +83,12 @@ html[data-tema^=tech] .lay-cartoes .cli{box-shadow:var(--glow)}
 html[data-tema^=tech] .box{box-shadow:var(--glow);border:1px solid var(--bd)}
 html[data-tema^=tech] h2{letter-spacing:.2px}
 .brand{display:flex;align-items:center;gap:12px;flex:1 0 auto}#srv{white-space:nowrap}.grow:has(.kpis){flex:1 1 100%!important}
-.logo{display:block;background:var(--logoc) no-repeat left center/contain;height:58px;width:217px;flex:none}
+.logo{display:block;background:var(--logo) no-repeat left center/contain;height:70px;width:250px;flex:none}
 .logo.big{height:90px;width:100%;background-position:center;margin:2px 0 14px}
 .brand .sub{font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;opacity:.65;border-left:1px solid var(--hbd,rgba(255,255,255,.3));padding-left:12px;white-space:nowrap}
-html[data-tema=techescuro] .logo{background-color:#fff;border-radius:9px;background-origin:content-box;padding:4px 8px;width:230px;height:62px;box-sizing:border-box}
+html[data-tema=techescuro] .logo{background-color:#fff;border-radius:9px;background-origin:content-box;padding:5px 10px;width:260px;height:80px;box-sizing:border-box}
 html[data-tema=techescuro] .logo.big{width:min(100%,260px);height:84px;margin:2px auto 14px;padding:8px 14px}
-html:not([data-tema^=tech]) .logo{background-color:#fff;border-radius:9px;background-origin:content-box;padding:4px 8px;width:230px;height:62px;box-sizing:border-box}
+html:not([data-tema^=tech]) .logo{background-color:#fff;border-radius:9px;background-origin:content-box;padding:5px 10px;width:260px;height:80px;box-sizing:border-box}
 html:not([data-tema^=tech]) .logo.big{width:min(100%,260px);height:84px;margin:2px auto 14px;padding:8px 14px}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px;margin:8px 0 4px}
 .kpi{background:var(--soft);border:1px solid var(--bd);border-radius:10px;padding:8px 10px;border-left:3px solid var(--mut)}
@@ -113,7 +113,7 @@ header{padding-top:max(10px,env(safe-area-inset-top));padding-left:max(16px,env(
 @media(max-width:700px){
  header{padding:max(8px,env(safe-area-inset-top)) 10px 8px;gap:8px}
  .brand{flex:1 1 100%}.brand .sub{display:none}
- .logo,html[data-tema=techescuro] .logo,html:not([data-tema^=tech]) .logo{width:min(210px,60vw);height:56px}
+ .logo,html[data-tema=techescuro] .logo,html:not([data-tema^=tech]) .logo{width:min(230px,66vw);height:66px}
  header select{flex:1 1 44%;min-width:0;font-size:13px}
  #who{flex:1 1 100%;font-size:12px;word-break:break-all}
  #srv{flex:1 1 100%}
@@ -139,7 +139,7 @@ header{padding-top:max(10px,env(safe-area-inset-top));padding-left:max(16px,env(
 <select id="selIdle" onchange="setPref('idle',this.value)" aria-label="Tempo de sessão"><option value="0">Sessão: sem limite</option><option value="5">Sessão: 5 min</option><option value="10">Sessão: 10 min</option><option value="15">Sessão: 15 min</option><option value="30">Sessão: 30 min</option><option value="60">Sessão: 60 min</option><option value="120">Sessão: 2 h</option></select>
 <select id="selLay" onchange="setPref('lay',this.value)" aria-label="Layout"><option value="lista">Layout: Lista</option><option value="cartoes">Layout: Cartões</option><option value="compacto">Layout: Compacto</option></select>
 <button class="s" id="bInst" style="display:none" onclick="instalar()">Instalar app</button><span id="who" class="mut" style="color:inherit;opacity:.8"></span><button class="s" id="bSair" style="display:none" onclick="sair()">Sair</button></header>
-<main id="app"></main><footer>Painel de licenças v1.4.2 · AdaptaSys</footer>
+<main id="app"></main><footer>Painel de licenças v1.4.3 · AdaptaSys</footer>
 <div class="ov" id="ov"><div class="box" id="box"></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
