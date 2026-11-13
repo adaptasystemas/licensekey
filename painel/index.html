@@ -139,7 +139,7 @@ header{padding-top:max(10px,env(safe-area-inset-top));padding-left:max(16px,env(
 <select id="selIdle" onchange="setPref('idle',this.value)" aria-label="Tempo de sessão"><option value="0">Sessão: sem limite</option><option value="5">Sessão: 5 min</option><option value="10">Sessão: 10 min</option><option value="15">Sessão: 15 min</option><option value="30">Sessão: 30 min</option><option value="60">Sessão: 60 min</option><option value="120">Sessão: 2 h</option></select>
 <select id="selLay" onchange="setPref('lay',this.value)" aria-label="Layout"><option value="lista">Layout: Lista</option><option value="cartoes">Layout: Cartões</option><option value="compacto">Layout: Compacto</option></select>
 <button class="s" id="bInst" style="display:none" onclick="instalar()">Instalar app</button><span id="who" class="mut" style="color:inherit;opacity:.8"></span><button class="s" id="bSair" style="display:none" onclick="sair()">Sair</button></header>
-<main id="app"></main><footer>Painel de licenças v1.4.3 · AdaptaSys</footer>
+<main id="app"></main><footer>Painel de licenças v1.4.5 · AdaptaSys</footer>
 <div class="ov" id="ov"><div class="box" id="box"></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
@@ -151,7 +151,9 @@ const LS={get(k){try{return localStorage.getItem(k)||''}catch(e){return ''}},set
 let sb=null,sess=null,DATA={clientes:[],planos:[]},FILT='',BUSCA='';
 const ROT={ativa:'Em dia',teste:'Em teste',carencia:'Em carência',vencida:'Vencida',bloqueada:'Bloqueada',isenta:'Isenta'};
 
-function cfg(){return {url:LS.get('lp_url'),key:LS.get('lp_key')}}
+/* projeto central e chave pública (anon/publishable) já vêm preenchidos; o que for salvo na tela "Conectar" tem prioridade */
+const DEF_URL='https://yrcvqwmsdydtwgqyboos.supabase.co',DEF_KEY='sb_publishable_CDgB487ct4FM4BV_JCKszA_8Tfg1Cmk';
+function cfg(){return {url:LS.get('lp_url')||DEF_URL,key:LS.get('lp_key')||DEF_KEY}}
 function fnUrl(){return cfg().url.replace(/\/+$/,'')+'/functions/v1/'+(LS.get('lp_fn')||'licenca')}
 async function api(action,extra){
   const {data:{session}}=await sb.auth.getSession();
