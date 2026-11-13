@@ -1,0 +1,52 @@
+AdaptaSys Painel para Windows
+=============================
+
+O QUE É
+Programa instalável do painel de licenças, com ícone na área de trabalho e no menu Iniciar.
+Abre o painel numa janela própria (sem barra de endereço) e se atualiza sozinho pela internet.
+
+COMO ATUALIZA
+1) O painel em si: sempre mostra a versão mais nova publicada no GitHub Pages. Quando você publica um
+   painel novo (os arquivos da pasta "painel"), o programa já abre com ele, sem reinstalar nada.
+2) O programa (a janela): ao abrir e a cada 4 horas ele procura versão nova em "Releases" do GitHub.
+   Se achar, baixa sozinho e pergunta se quer reiniciar agora. Também há Painel > Verificar atualização.
+
+COMO GERAR O INSTALADOR (uma vez, e depois a cada versão nova do programa)
+1) No repositório adaptasystemas/licensekey, envie a pasta "desktop" deste pacote (com tudo dentro).
+2) Crie o arquivo  .github/workflows/instalador-painel.yml  com o conteúdo de
+   "instalador-painel.yml.txt" (GitHub > Add file > Create new file; digite o caminho com as barras
+   e o GitHub cria as pastas).
+3) Aba Actions > "Instalador AdaptaSys Painel (Windows)" > Run workflow. Leva uns 3 a 5 minutos.
+4) Aba Releases (lado direito da página do repositório): abra a versão "v1.0.2" e baixe
+   "AdaptaSys-Painel-Instalador-1.0.2.exe" (o número é a versão). É esse o instalador. Pode mandar para qualquer computador.
+   Se a aba Actions pedir para habilitar os workflows, habilite.
+   Se der erro de permissão ao publicar: Settings > Actions > General > Workflow permissions >
+   "Read and write permissions" > Save, e rode de novo.
+
+COMO LANÇAR UMA VERSÃO NOVA DO PROGRAMA (só quando mudar a janela, o que é raro)
+Edite desktop/package.json, aumente o número em "version" (ex.: 1.0.0 para 1.0.1) e rode o workflow
+de novo. Os computadores com o programa instalado recebem sozinhos.
+
+AVISO DO WINDOWS (normal)
+O instalador não tem assinatura digital paga, então o Windows pode mostrar "O Windows protegeu o seu
+computador". Clique em "Mais informações" e depois em "Executar assim mesmo". Só acontece na instalação.
+
+ANTES DE USAR
+O painel pede login e o endereço do projeto central na primeira vez, como no navegador. O limite de
+inatividade (Sessão) e o tema valem também aqui.
+
+SE O ÍCONE DO INSTALADOR NÃO MUDAR
+1) Confira no repositório se desktop/build/icon.ico e desktop/build/icon.png foram trocados pelos novos
+   (abra o arquivo no GitHub e veja a data do envio).
+2) Aumente a versão em desktop/package.json (ex.: 1.0.1 para 1.0.2) antes de rodar o workflow. Com o
+   mesmo número de versão o GitHub mantém o instalador antigo na aba Releases e o novo não substitui.
+3) Baixe o instalador da versão nova em Releases (não o da versão antiga) ou do Artifacts da execução.
+4) Desinstale o programa antigo antes de instalar. O Windows guarda os ícones em cache: se o atalho
+   ainda mostrar o ícone velho, apague o atalho, reinstale e reinicie o computador (ou reinicie o
+   Explorador de Arquivos pelo Gerenciador de Tarefas).
+
+ÍCONE (versão 1.0.2): o ícone agora é o arquivo desktop/build/adaptasys.ico (nome novo, de propósito).
+Se o arquivo não estiver no repositório, o workflow FALHA com erro de ícone, em vez de gerar com o ícone velho.
+O nome do instalador agora leva a versão, o que evita o Windows mostrar o ícone em cache do arquivo anterior.
+Atualize também o arquivo .github/workflows/instalador-painel.yml com o novo instalador-painel.yml.txt:
+ele mostra na execução (aba Actions) o arquivo de ícone e a versão que estão sendo usados.

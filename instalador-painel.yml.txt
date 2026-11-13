@@ -1,0 +1,34 @@
+# Gera o instalador do AdaptaSys Painel (Windows) e publica em "Releases" para os computadores se atualizarem sozinhos.
+# Como usar: aba "Actions" > "Instalador AdaptaSys Painel (Windows)" > "Run workflow".
+# Este arquivo precisa ficar em:  .github/workflows/instalador-painel.yml  (sem o .txt)
+name: Instalador AdaptaSys Painel (Windows)
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Conferir o ícone que será usado
+        shell: bash
+        working-directory: desktop
+        run: |
+          ls -la build
+          sha256sum build/adaptasys.ico
+          grep -n '"version"' package.json
+      - name: Instalar e gerar
+        working-directory: desktop
+        run: |
+          npm install
+          npm run release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AdaptaSys-Painel-Instalador
+          path: desktop/dist/*.exe

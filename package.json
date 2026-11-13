@@ -1,0 +1,67 @@
+{
+  "name": "adaptasys-painel",
+  "version": "1.0.2",
+  "description": "AdaptaSys: painel de licenças para Windows, com atualização automática pela internet.",
+  "main": "main.js",
+  "author": "AdaptaSys",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --publish never",
+    "release": "electron-builder --win --publish always"
+  },
+  "devDependencies": {
+    "electron": "33.2.1",
+    "electron-builder": "25.1.8"
+  },
+  "dependencies": {
+    "electron-updater": "6.3.9"
+  },
+  "build": {
+    "appId": "br.com.adaptasys.painel",
+    "productName": "AdaptaSys Painel",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "offline.html",
+      "package.json",
+      "build/adaptasys.ico"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/adaptasys.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "AdaptaSys Painel",
+      "artifactName": "AdaptaSys-Painel-Instalador-${version}.${ext}",
+      "allowToChangeInstallationDirectory": true,
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false,
+      "installerIcon": "build/adaptasys.ico",
+      "uninstallerIcon": "build/adaptasys.ico",
+      "installerHeaderIcon": "build/adaptasys.ico"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "adaptasystemas",
+        "repo": "licensekey",
+        "releaseType": "release"
+      }
+    ]
+  }
+}
