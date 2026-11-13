@@ -1,6 +1,6 @@
 {
   "name": "adaptasys-painel",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AdaptaSys: painel de licenças para Windows, com atualização automática pela internet.",
   "main": "main.js",
   "author": "AdaptaSys",
@@ -20,10 +20,25 @@
   "build": {
     "appId": "br.com.adaptasys.painel",
     "productName": "AdaptaSys Painel",
-    "directories": { "output": "dist", "buildResources": "build" },
-    "files": ["main.js", "offline.html", "package.json", "build/icon.ico"],
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "offline.html",
+      "package.json",
+      "build/icon.ico"
+    ],
     "win": {
-      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "icon": "build/icon.ico"
     },
     "nsis": {
@@ -35,10 +50,18 @@
       "artifactName": "AdaptaSys-Painel-Instalador.${ext}",
       "allowToChangeInstallationDirectory": true,
       "runAfterFinish": true,
-      "deleteAppDataOnUninstall": false
+      "deleteAppDataOnUninstall": false,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico"
     },
     "publish": [
-      { "provider": "github", "owner": "adaptasystemas", "repo": "licensekey", "releaseType": "release" }
+      {
+        "provider": "github",
+        "owner": "adaptasystemas",
+        "repo": "licensekey",
+        "releaseType": "release"
+      }
     ]
   }
 }
